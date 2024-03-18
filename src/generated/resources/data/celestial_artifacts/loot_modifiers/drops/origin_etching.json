@@ -1,0 +1,35 @@
+{
+  "type": "celestial_core:add_item",
+  "chance": "celestial_configs/celestial_artifacts-common.toml/materials.originEtchingDropChance",
+  "conditions": [
+    {
+      "condition": "celestial_artifacts:curse_on"
+    },
+    {
+      "condition": "celestial_core:player_flag",
+      "flag": "ORIGIN"
+    },
+    {
+      "condition": "minecraft:entity_properties",
+      "entity": "this",
+      "predicate": {
+        "type": "minecraft:ender_dragon"
+      }
+    },
+    {
+      "condition": "minecraft:entity_properties",
+      "entity": "this",
+      "predicate": {
+        "location": {
+          "position": {
+            "y": {
+              "min": 200.0
+            }
+          }
+        }
+      }
+    }
+  ],
+  "fail": "celestial_artifacts:nebula_cube",
+  "item": "celestial_artifacts:origin_etching"
+}

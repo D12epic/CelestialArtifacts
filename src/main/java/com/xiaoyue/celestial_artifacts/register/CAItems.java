@@ -2,6 +2,7 @@ package com.xiaoyue.celestial_artifacts.register;
 
 import com.tterrag.registrate.builders.ItemBuilder;
 import com.tterrag.registrate.util.entry.ItemEntry;
+import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import com.xiaoyue.celestial_artifacts.CelestialArtifacts;
 import com.xiaoyue.celestial_artifacts.content.core.attack.SimpleListener;
@@ -32,7 +33,9 @@ import com.xiaoyue.celestial_artifacts.content.curios.heart.DemonHeart;
 import com.xiaoyue.celestial_artifacts.content.curios.heart.TwistedHeart;
 import com.xiaoyue.celestial_artifacts.content.curios.necklace.*;
 import com.xiaoyue.celestial_artifacts.content.curios.pendant.ShadowPendant;
-import com.xiaoyue.celestial_artifacts.content.curios.ring.*;
+import com.xiaoyue.celestial_artifacts.content.curios.ring.FlightRing;
+import com.xiaoyue.celestial_artifacts.content.curios.ring.NetherFire;
+import com.xiaoyue.celestial_artifacts.content.curios.ring.RingOfLife;
 import com.xiaoyue.celestial_artifacts.content.curios.scroll.SeaGodScroll;
 import com.xiaoyue.celestial_artifacts.content.curios.scroll.SkywalkerScroll;
 import com.xiaoyue.celestial_artifacts.content.curios.set.EmeraldSet;
@@ -48,6 +51,8 @@ import com.xiaoyue.celestial_artifacts.content.items.tool.EarthPickaxe;
 import com.xiaoyue.celestial_artifacts.content.items.tool.EarthShovel;
 import com.xiaoyue.celestial_artifacts.data.CALang;
 import com.xiaoyue.celestial_artifacts.data.CAModConfig;
+import com.xiaoyue.celestial_core.content.generic.CCTooltipItem;
+import com.xiaoyue.celestial_core.data.CCLangData;
 import com.xiaoyue.celestial_core.register.CCAttributes;
 import com.xiaoyue.celestial_core.register.CCEffects;
 import com.xiaoyue.celestial_core.utils.EntityUtils;
@@ -58,8 +63,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -72,6 +77,13 @@ import java.util.List;
 import java.util.function.IntSupplier;
 
 public class CAItems {
+
+	public static final ItemEntry<CCTooltipItem> THE_END_DUST = material("the_end_dust",
+			p -> new CCTooltipItem(new Item.Properties().rarity(Rarity.EPIC), false,
+					() -> CALang.Tooltip.END_DUST.get(CALang.Modular.curseItem(),
+							TextFacet.perc(CAModConfig.COMMON.materials.endDustDropChance.get()))));
+	public static final ItemEntry<CCTooltipItem> NEBULA_CUBE = material("nebula_cube",
+			p -> new CCTooltipItem(new Item.Properties().rarity(Rarity.EPIC), false, CALang.Tooltip.NEBULA_CUBE::get));
 
 	public static final ItemEntry<Item> GOLD_RING, AMETHYST_RING, DIAMOND_RING, EMERALD_RING, FLIGHT_RING, NETHERITE_RING, RING_OF_LIFE, THUNDER_RING, NETHER_FIRE, FREEZE_RING;
 	public static final ItemEntry<Item> WAR_DEAD_BADGE, UNDEAD_CHARM, DESTROYER_BADGE, TWISTED_BRAIN, CORRUPT_BADGE,
@@ -86,7 +98,7 @@ public class CAItems {
 			HOLY_NECKLACE, HEIRLOOM_NECKLACE, EMERALD_NECKLACE, ENDER_PROTECTOR, RED_HEART_NECKLACE, LOCK_OF_ABYSS, SPIRIT_NECKLACE;
 	public static final ItemEntry<Item> SEA_GOD_CROWN, PRAYER_CROWN, ABYSS_CORE, GUARDIAN_EYE, EVIL_EYE, SPIRIT_CROWN;
 	public static final ItemEntry<Item> MAGIC_ARROW_BAG, FLAME_ARROW_BAG, SPIRIT_ARROW_BAG, IRON_SCABBARD, LEECH_SCABBARD, TITAN_SCABBARD, TWISTED_SCABBARD;
-	public static final ItemEntry<Item> CATASTROPHE_SCROLL, CHAOTIC_ETCHING, ORIGIN_ETCHING, ETCHING_OF_LIFE, TRUTH_ETCHING, DESIRE_ETCHING, NIHILITY_ETCHING, END_ETCHING;
+	public static final ItemEntry<Item> CATASTROPHE_SCROLL, CHAOTIC_ETCHING, ORIGIN_ETCHING, LIFE_ETCHING, TRUTH_ETCHING, DESIRE_ETCHING, NIHILITY_ETCHING, END_ETCHING;
 
 	static {
 
@@ -123,17 +135,17 @@ public class CAItems {
 							)
 					));
 			// 生息之戒
-			RING_OF_LIFE = ring("ring_of_life", () ->
-					ModularCurio.builder().rarity(IRarityUtils.GREEN).build(new RingOfLife()));
+			RING_OF_LIFE = ring("ring_of_life", () -> ModularCurio.builder().rarity(IRarityUtils.GREEN)
+					.build(new RingOfLife()));
 			// 雷电之戒
-			THUNDER_RING = ring("thunder_ring", () ->
-					ModularCurio.builder().rarity(Rarity.RARE).build(new ThunderRing()));
+			THUNDER_RING = ring("thunder_ring", () -> ModularCurio.builder().rarity(Rarity.RARE)
+					.build(SimpleListener.negateType(CALang.DamageTypes.LIGHTNING)));
 			// 地狱之火
-			NETHER_FIRE = ring("nether_fire", () ->
-					ModularCurio.builder().rarity(Rarity.RARE).build(new NetherFire()));
+			NETHER_FIRE = ring("nether_fire", () -> ModularCurio.builder().rarity(Rarity.RARE)
+					.build(SimpleListener.negateType(CALang.DamageTypes.FIRE), new NetherFire()));
 			// 冰冻之戒
-			FREEZE_RING = ring("freeze_ring", () ->
-					ModularCurio.builder().rarity(Rarity.RARE).build(new FreezeRing()));
+			FREEZE_RING = ring("freeze_ring", () -> ModularCurio.builder().rarity(Rarity.RARE)
+					.build(SimpleListener.negateType(CALang.DamageTypes.FREEZE)));
 		}
 
 		// charms
@@ -151,7 +163,7 @@ public class CAItems {
 			DESTROYER_BADGE = charm("destroyer_badge", () -> ModularCurio.builder()
 					.rarity(Rarity.EPIC).build(
 							AttrFacet.add(() -> Attributes.ATTACK_DAMAGE, CAModConfig.COMMON.charm.destroyerBadgeAttack::get),
-							AttrFacet.multTotal(L2DamageTracker.REDUCTION, CAModConfig.COMMON.charm.destroyerBadgeDamagePenalty::get),
+							AttrFacet.multTotal(L2DamageTracker.REDUCTION::get, CAModConfig.COMMON.charm.destroyerBadgeDamagePenalty::get),
 							SimpleListener.hurtBonus(
 									() -> CALang.Condition.LOW_HEALTH.get(TextFacet.perc(CAModConfig.COMMON.charm.destroyerBadgeThreshold.get())),
 									(p, t, c) -> p.getHealth() <= CAModConfig.COMMON.charm.destroyerBadgeThreshold.get() * p.getMaxHealth(),
@@ -218,17 +230,17 @@ public class CAItems {
 							new TokenFacet<>("angel_pearl", AngelPearl::new)
 					));
 
-			// 大恶魔之咒 TODO config
-			DEMON_CURSE = charm("demon_curse", () -> ModularCurio.builder()
-					.rarity(IRarityUtils.DARK_PURPLE).build(
-							AttrFacet.multTotal(CCAttributes.REPLY_POWER, () -> -0.9),
-							new TokenFacet<>("demon_curse", DemonCurse::new)));
+			// 大恶魔之咒
+			DEMON_CURSE = charm("demon_curse", () -> ModularCurio.builder().rarity(IRarityUtils.DARK_PURPLE)
+					.build(new TokenFacet<>("demon_curse", DemonCurse::new)));
 
-			// 骑士庇护 TODO config
+			// 骑士庇护
 			KNIGHT_SHELTER = charm("knight_shelter", () -> ModularCurio.builder().rarity(Rarity.UNCOMMON)
 					.build(new KnightShelter(),
-							AttrFacet.add(() -> Attributes.ARMOR, () -> 8),
-							AttrFacet.add(L2DamageTracker.ABSORB, () -> 4)
+							AttrFacet.add(() -> Attributes.ARMOR,
+									CAModConfig.COMMON.charm.knightShelterArmor::get),
+							AttrFacet.add(L2DamageTracker.ABSORB::get,
+									CAModConfig.COMMON.charm.knightShelterDamageReduction::get)
 					));
 
 			// 魂灵匣
@@ -243,7 +255,8 @@ public class CAItems {
 			// 暴食徽章
 			GLUTTONY_BADGE = charm("gluttony_badge", () -> ModularCurio.builder()
 					.rarity(Rarity.EPIC).build(new GluttonyBadge(),
-							EffectFacet.of(() -> MobEffects.HUNGER, 3, 1)
+							EffectFacet.of(() -> MobEffects.HUNGER, () -> 3,
+									CAModConfig.COMMON.charm.gluttonyBadgeHungerLevel::get)
 					));
 
 			// 魔法马掌
@@ -253,8 +266,7 @@ public class CAItems {
 									CAModConfig.COMMON.charm.magicHorseshoeSpeedBonus::get),
 							AttrFacet.add(() -> Attributes.LUCK,
 									CAModConfig.COMMON.charm.magicHorseshoeLuck::get),
-							SimpleListener.protectType(CALang.DamageType.FALL::get,
-									e -> e.is(DamageTypes.FALL),
+							SimpleListener.protectType(CALang.DamageTypes.FALL,
 									CAModConfig.COMMON.charm.magicHorseshoeFallReduction::get)
 					));
 
@@ -263,7 +275,7 @@ public class CAItems {
 					.build(
 							AttrFacet.add(() -> Attributes.MAX_HEALTH,
 									CAModConfig.COMMON.charm.bearingStamenMaxHealth::get),
-							AttrFacet.add(CCAttributes.REPLY_POWER,
+							AttrFacet.add(CCAttributes.REPLY_POWER::get,
 									CAModConfig.COMMON.charm.bearingStamenRegen::get),
 							EffectFacet.of(() -> MobEffects.REGENERATION, () -> 2,
 									CAModConfig.COMMON.charm.bearingStamenLevel::get)
@@ -274,17 +286,18 @@ public class CAItems {
 
 			// 金沙护符
 			SANDS_TALISMAN = charm("sands_talisman", () ->
-					ModularCurio.builder().loot(1).build(
+					ModularCurio.builder().rarity(Rarity.UNCOMMON).loot(1).build(
+							XpBonusFeature.simple(CAModConfig.COMMON.charm.sandsTalismanExpBonus::get),
 							SimpleListener.hurtBonus(
 									CALang.Condition.HOT_REGION::get,
 									(p, t, c) -> p.level().getBiome(p.blockPosition()).get().getBaseTemperature() >= 0.01,
-									CAModConfig.COMMON.charm.sandsTalismanDamageBonus::get),
-							XpBonusFeature.simple(CAModConfig.COMMON.charm.sandsTalismanExpBonus::get)
+									CAModConfig.COMMON.charm.sandsTalismanDamageBonus::get)
 					));
 
-			// 古代殉葬品 TODO config
+			// 古代殉葬品
 			SACRIFICIAL_OBJECT = charm("sacrificial_object", () -> ModularCurio.builder().rarity(Rarity.EPIC)
-					.loot(1).build(AttrFacet.multTotal(L2DamageTracker.REDUCTION, () -> -0.05),
+					.loot(1).build(AttrFacet.multTotal(L2DamageTracker.REDUCTION::get,
+									() -> -CAModConfig.COMMON.charm.sacrificialObjectReduction.get()),
 							new SacrificialObject()));
 		}
 
@@ -333,7 +346,10 @@ public class CAItems {
 							AttrFacet.multBase(() -> Attributes.MOVEMENT_SPEED, () -> 0.25),
 							AttrFacet.multBase(() -> Attributes.FLYING_SPEED, () -> 0.25),
 							AttrFacet.multBase(ForgeMod.SWIM_SPEED, () -> 0.25),
-							TextFacet.line(() -> Component.translatable("tooltip.celestial_artifacts.traveler_scroll.shift2"))
+							TextFacet.line(() -> CALang.Scroll.TRAVELER.get(
+									EffectFacet.getDesc(CAModConfig.COMMON.scroll.travelerScrollSpeedEffect()),
+									EffectFacet.getDesc(CAModConfig.COMMON.scroll.travelerScrollRegenEffect())
+							))
 					));
 			// 海神卷轴
 			SEA_GOD_SCROLL = scroll("sea_god_scroll", () ->
@@ -370,7 +386,7 @@ public class CAItems {
 			// 生命手环 TODO config
 			LIFE_BRACELET = bracelet("life_bracelet", () ->
 					ModularCurio.builder().rarity(Rarity.RARE).build(
-							AttrFacet.add(CCAttributes.REPLY_POWER, () -> 0.15),
+							AttrFacet.add(CCAttributes.REPLY_POWER::get, () -> 0.15),
 							EffectFacet.of(() -> MobEffects.REGENERATION, 2, 0)
 					));
 			// 珍钻手环 TODO config
@@ -378,12 +394,12 @@ public class CAItems {
 					ModularCurio.builder().rarity(Rarity.EPIC).build(
 							AttrFacet.add(ForgeMod.BLOCK_REACH, () -> 2),
 							SlotFacet.of("ring", 1),
-							SimpleListener.protectType(CALang.DamageType.MAGIC::get, e -> e.is(DamageTypes.MAGIC), () -> 0.4)
+							SimpleListener.protectType(CALang.DamageTypes.MAGIC, () -> 0.4)
 					));
 			// 绯红石手环 TODO config
 			RED_RUBY_BRACELET = bracelet("red_ruby_bracelet", () ->
 					ModularCurio.builder().rarity(IRarityUtils.RED).build(
-							SimpleListener.protectType(CALang.DamageType.FIRE::get, e -> e.is(DamageTypeTags.IS_FIRE), () -> 0.9),
+							SimpleListener.protectType(CALang.DamageTypes.FIRE, () -> 0.9),
 							HurtPlayerEffectFacet.ofType(e -> e.is(DamageTypeTags.IS_FIRE), CALang.Condition.HURT_FIRE::get,
 									EffectFacet.of(() -> MobEffects.DAMAGE_BOOST, 3, 0))
 					));
@@ -412,10 +428,11 @@ public class CAItems {
 			// 无主的吊坠
 			UNOWNED_PENDANT = pendant("unowned_pendant", () ->
 					ModularCurio.builder().rarity(Rarity.RARE).build());
-			// 混沌吊坠 TODO text
+			// 混沌吊坠
 			CHAOTIC_PENDANT = pendant("chaotic_pendant", () ->
 					ModularCurio.builder().rarity(Rarity.EPIC).requireCS().loot(1).build(
-							TextFacet.line(() -> Component.translatable("tooltip.celestial_artifacts.chaotic_pendant.shift2"))
+							TextFacet.line(() -> CALang.Pendant.CHAOTIC.get(TextFacet.num(
+									CAModConfig.COMMON.pendant.chaoticPendantEnchantLevel.get())))
 					));
 			// 怨影吊坠
 			SHADOW_PENDANT = pendant("shadow_pendant", () ->
@@ -445,7 +462,7 @@ public class CAItems {
 			// 疾行项链
 			GALLOP_NECKLACE = necklace("gallop_necklace", () ->
 					ModularCurio.builder().rarity(Rarity.RARE).build(
-							AttrFacet.add(() -> Attributes.MOVEMENT_SPEED,
+							AttrFacet.multBase(() -> Attributes.MOVEMENT_SPEED,
 									CAModConfig.COMMON.necklace.gallopNecklaceSpeedBonus::get),
 							new GallopNecklace()
 					));
@@ -534,18 +551,24 @@ public class CAItems {
 									EffectFacet.of(() -> MobEffects.NIGHT_VISION, 2, 0)
 							), seaGodSet()));
 
-			// 祷告者王冠 TODO config
+			// 祷告者王冠
 			PRAYER_CROWN = head("prayer_crown", () ->
 					ModularCurio.builder().rarity(Rarity.UNCOMMON).build(
 							InvulToken.of(() -> 10),
+							SimpleListener.protect(CALang.Condition.SNEAK::get,
+									(player, attacker, cache) -> player.isCrouching(),
+									CAModConfig.COMMON.head.prayerCrownProtection::get),
 							new PrayerCrown()));
 			// 深渊意志之核
 			ABYSS_CORE = head("abyss_core", () ->
 					ModularCurio.builder().rarity(IRarityUtils.DARK_AQUA).build(new AbyssCore()));
-			// 守卫者之眼 TODO config
+			// 守卫者之眼
 			GUARDIAN_EYE = head("guardian_eye", () ->
 					ModularCurio.builder().rarity(Rarity.RARE).build(
 							AttrFacet.multBase(ForgeMod.SWIM_SPEED, () -> 0.15),
+							SimpleListener.protect(CALang.Condition.PLAYER_WET::get,
+									(player, attacker, cache) -> player.isInWaterRainOrBubble(),
+									CAModConfig.COMMON.head.guardianEyeProtection::get),
 							new GuardianEye()));
 			// 邪恶之瞳
 			EVIL_EYE = head("evil_eye", () ->
@@ -562,14 +585,14 @@ public class CAItems {
 			MAGIC_ARROW_BAG = back("magic_arrow_bag", () -> ModularCurio.of(
 					AttrFacet.add(L2DamageTracker.BOW_STRENGTH::get,
 							CAModConfig.COMMON.back.magicArrowBagBowStrength::get),
-					AttrFacet.add(CCAttributes.ARROW_KNOCK,
+					AttrFacet.add(CCAttributes.ARROW_KNOCK::get,
 							CAModConfig.COMMON.back.magicArrowBagArrowKnock::get)
 			));
 			// 火焰箭袋
 			FLAME_ARROW_BAG = back("flame_arrow_bag", () -> ModularCurio.of(
 					AttrFacet.add(L2DamageTracker.BOW_STRENGTH::get,
 							CAModConfig.COMMON.back.flameArrowBagBowStrength::get),
-					AttrFacet.add(CCAttributes.ARROW_KNOCK,
+					AttrFacet.add(CCAttributes.ARROW_KNOCK::get,
 							CAModConfig.COMMON.back.flameArrowBagArrowKnock::get),
 					TextFacet.line(() -> CALang.Back.FLAME.get(TextFacet.num(
 							CAModConfig.COMMON.back.flameArrowBagTime.get())))
@@ -579,9 +602,9 @@ public class CAItems {
 					ModularCurio.builder().rarity(IRarityUtils.GREEN).build(
 							AttrFacet.add(L2DamageTracker.BOW_STRENGTH::get,
 									CAModConfig.COMMON.back.spiritArrowBagBowStrength::get),
-							AttrFacet.add(CCAttributes.ARROW_SPEED,
+							AttrFacet.add(CCAttributes.ARROW_SPEED::get,
 									CAModConfig.COMMON.back.spiritArrowBagArrowSpeed::get),
-							AttrFacet.add(CCAttributes.ARROW_KNOCK,
+							AttrFacet.add(CCAttributes.ARROW_KNOCK::get,
 									CAModConfig.COMMON.back.spiritArrowBagArrowKnock::get),
 							spiritSet()
 					));
@@ -615,7 +638,7 @@ public class CAItems {
 							EffectFacet.of(CCEffects.BLADE_MODIFIER::get, 3, 0, 5),
 							AttrFacet.multBase(() -> Attributes.ATTACK_KNOCKBACK, () -> 1),
 							AttrFacet.multBase(() -> Attributes.ATTACK_SPEED, () -> 0.25),
-							AttrFacet.multTotal(CCAttributes.REPLY_POWER, () -> -0.5),
+							AttrFacet.multTotal(CCAttributes.REPLY_POWER::get, () -> -0.5),
 							TwistedScabbard.TOKEN
 					));
 		}
@@ -625,8 +648,9 @@ public class CAItems {
 			CATASTROPHE_SCROLL = item("curios/", "catastrophe_scroll", () ->
 					ModularCurio.builder().curse().immune().rarity(IRarityUtils.DARK_PURPLE).hideAttr().build(
 							SlotFacet.of("etching", 7),
+							SlotFacet.of("charm", 3),
 							new TokenFacet<>("catastrophe_scroll", CatastropheScroll::new)
-					)).tag(curio("c_charm")).register();
+					)).tag(curio("catastrophe")).register();
 			// 混沌
 			CHAOTIC_ETCHING = etching("chaotic_etching", () -> ModularCurio.builder().immune().hideAttr().build());
 			// 始源
@@ -634,7 +658,7 @@ public class CAItems {
 					BreakSpeedFeature.simple(CatastropheScroll::getOriginBonus)
 			));
 			// 生命
-			ETCHING_OF_LIFE = etching("etching_of_life", () -> ModularCurio.builder().immune().hideAttr().build());
+			LIFE_ETCHING = etching("life_etching", () -> ModularCurio.builder().immune().hideAttr().build());
 			// 真理
 			TRUTH_ETCHING = etching("truth_etching", () -> ModularCurio.builder().immune().hideAttr().build());
 			// 欲望
@@ -743,6 +767,12 @@ public class CAItems {
 
 	private static TagKey<Item> curio(String id) {
 		return ItemTags.create(new ResourceLocation(Curios.MODID, id));
+	}
+
+	public static <T extends Item> ItemEntry<T> material(String id, NonNullFunction<Item.Properties, T> factory) {
+		return CelestialArtifacts.REGISTRATE.item(id, factory)
+				.model((ctx, pvd) -> pvd.generated(ctx, pvd.modLoc("item/materials/" + ctx.getName())))
+				.register();
 	}
 
 	public static void register() {
